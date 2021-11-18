@@ -34,7 +34,8 @@ class Context:
 
     def __init__(self):
         self._lock = threading.Lock()
-        self._callbacks = []
+        self._pre_shutdown_callbacks = []
+        self._on_shutdown_callbacks = []
         self._logging_initialized = False
         self.__context = None
 
@@ -86,20 +87,21 @@ class Context:
             with self.__context:
                 return self.__context.ok()
 
-    def _call_on_shutdown_callbacks(self):
-        for weak_method in self._callbacks:
+    def _call_shutdown_callbacks(self, callbacks):
+        for weak_method in callbacks:
             callback = weak_method()
             if callback is not None:
                 callback()
-        self._callbacks = []
+        callbacks = []
 
     def shutdown(self):
         """Shutdown this context."""
         if self.__context is None:
             raise RuntimeError('Context must be initialized before it can be shutdown')
         with self.__context, self._lock:
+            self._call_shutdown_callbacks(self._pre_shutdown_callbacks)
             self.__context.shutdown()
-            self._call_on_shutdown_callbacks()
+            self._call_shutdown_callbacks(self._on_shutdown_callbacks)
             self._logging_fini()
 
     def try_shutdown(self):
@@ -108,22 +110,46 @@ class Context:
             return
         with self.__context, self._lock:
             if self.__context.ok():
+                self._call_shutdown_callbacks(self._pre_shutdown_callbacks)
                 self.__context.shutdown()
-                self._call_on_shutdown_callbacks()
+                self._call_shutdown_callbacks(self._on_shutdown_callbacks)
                 self._logging_fini()
 
-    def _remove_callback(self, weak_method):
-        self._callbacks.remove(weak_method)
+    def _remove_on_shutdown_callback(self, weak_method):
+        self._on_shutdown_callbacks.remove(weak_method)
+
+    def _remove_pre_shutdown_callback(self, weak_method):
+        self._pre_shutdown_callbacks.remove(weak_method)
 
     def on_shutdown(self, callback: Callable[[], None]):
         """Add a callback to be called on shutdown."""
+        self.add_on_shutdown_callback(callback)
+
+    def add_on_shutdown_callback(self, callback: Callable[[], None]):
+        """Add a callback to be called after shutdown."""
+        if not self.__context.ok():
+            if not callable(callback):
+                raise TypeError('callback should be a callable, got {}', type(callback))
+            callback()
+        else:
+            self._add_shutdown_callback(
+                self._on_shutdown_callbacks,
+                callback,
+                self._remove_on_shutdown_callback)
+
+    def add_pre_shutdown_callback(self, callback: Callable[[], None]):
+        """Add a callback to be called before shutdown."""
+        self._add_shutdown_callback(
+            self._pre_shutdown_callbacks,
+            callback,
+            self._remove_pre_shutdown_callback)
+
+    def _add_shutdown_callback(self, callbacks, callback: Callable[[], None], remove_func):
+        """Add a callback to callback list."""
         if not callable(callback):
             raise TypeError('callback should be a callable, got {}', type(callback))
         with self.__context, self._lock:
-            if not self.__context.ok():
-                callback()
-            else:
-                self._callbacks.append(weakref.WeakMethod(callback, self._remove_callback))
+            callbacks.append(weakref.WeakMethod(callback, remove_func))
 
     def _logging_fini(self):
         # This function must be called with self._lock held.
