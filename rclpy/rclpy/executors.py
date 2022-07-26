@@ -204,10 +204,9 @@ class Executor:
                 self._is_shutdown = True
                 # Tell executor it's been shut down
                 self._guard.trigger()
-        if not self._is_shutdown:
-            if not self._work_tracker.wait(timeout_sec):
-                return False
+        return True
 
+    def _shutdown_process(self):
         # Clean up stuff that won't be used anymore
         with self._nodes_lock:
             self._nodes = set()
@@ -222,7 +221,6 @@ class Executor:
         self._cb_iter = None
         self._last_args = None
         self._last_kwargs = None
-        return True
 
     def __del__(self):
         if self._sigint_gc is not None:
@@ -695,7 +693,15 @@ class Executor:
                 # Create a new generator
                 self._last_args = args
                 self._last_kwargs = kwargs
-                self._cb_iter = self._wait_for_ready_callbacks(*args, **kwargs)
+                try:
+                    self._cb_iter = self._wait_for_ready_callbacks(*args, **kwargs)
+                except ShutdownException:
+                    self._shutdown_process()
+                    raise ShutdownException()
+
+            if self._is_shutdown:
+                self._shutdown_process()
+                raise ShutdownException()
 
             try:
                 return next(self._cb_iter)
