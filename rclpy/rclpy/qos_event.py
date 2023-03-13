@@ -42,11 +42,17 @@ QoSMessageLostInfo = _rclpy.rmw_message_lost_status_t
 # Payload type for Subscription Incompatible QoS callback.
 QoSRequestedIncompatibleQoSInfo = _rclpy.rmw_requested_qos_incompatible_event_status_t
 
+# Payload type for Subscription matched callback.
+QoSSubscriptionMatchedInfo = _rclpy.rmw_matched_status_t
+
 # Payload type for Publisher Deadline callback.
 QoSOfferedDeadlineMissedInfo = _rclpy.rmw_offered_deadline_missed_status_t
 
 # Payload type for Publisher Liveliness callback.
 QoSLivelinessLostInfo = _rclpy.rmw_liveliness_lost_status_t
+
+# Payload type for Publisher matched callback.
+QoSPublisherMatchedInfo = _rclpy.rmw_matched_status_t
 
 """
 Payload type for Publisher Incompatible QoS callback.
@@ -136,6 +142,7 @@ class SubscriptionEventCallbacks:
         incompatible_qos: Optional[Callable[[QoSRequestedIncompatibleQoSInfo], None]] = None,
         liveliness: Optional[Callable[[QoSLivelinessChangedInfo], None]] = None,
         message_lost: Optional[Callable[[QoSMessageLostInfo], None]] = None,
+        matched: Optional[Callable[[QoSSubscriptionMatchedInfo], None]] = None,
         use_default_callbacks: bool = True,
     ) -> None:
         """
@@ -148,6 +155,8 @@ class SubscriptionEventCallbacks:
         :param liveliness: A user-defined callback that is called when the Liveliness of
             a Publisher on subscribed topic changes.
         :param message_lost: A user-defined callback that is called when a messages is lost.
+        :param matched: A user-defined callback that is called when a Publisher is connected or
+             disconnected
         :param use_default_callbacks: Whether or not to use default callbacks when the user
             doesn't supply one
         """
@@ -155,6 +164,7 @@ class SubscriptionEventCallbacks:
         self.incompatible_qos = incompatible_qos
         self.liveliness = liveliness
         self.message_lost = message_lost
+        self.matched = matched
         self.use_default_callbacks = use_default_callbacks
 
     def create_event_handlers(
@@ -211,6 +221,13 @@ class SubscriptionEventCallbacks:
                 event_type=QoSSubscriptionEventType.RCL_SUBSCRIPTION_MESSAGE_LOST,
                 parent_impl=subscription))
 
+        if self.matched:
+            event_handlers.append(QoSEventHandler(
+                callback_group=callback_group,
+                callback=self.matched,
+                event_type=QoSSubscriptionEventType.RCL_SUBSCRIPTION_MATCHED,
+                parent_impl=subscription))
+
         return event_handlers
 
 
@@ -223,6 +240,7 @@ class PublisherEventCallbacks:
         deadline: Optional[Callable[[QoSOfferedDeadlineMissedInfo], None]] = None,
         liveliness: Optional[Callable[[QoSLivelinessLostInfo], None]] = None,
         incompatible_qos: Optional[Callable[[QoSRequestedIncompatibleQoSInfo], None]] = None,
+        matched: Optional[Callable[[QoSPublisherMatchedInfo], None]] = None,
         use_default_callbacks: bool = True,
     ) -> None:
         """
@@ -234,12 +252,15 @@ class PublisherEventCallbacks:
             fails to signal its Liveliness and is reported as not-alive.
         :param incompatible_qos: A user-defined callback that is called when a Subscription
             with incompatible QoS policies is discovered on subscribed topic.
+        :param matched: A user-defined callback that is called when a Subscription is connected or
+            disconnected.
         :param use_default_callbacks: Whether or not to use default callbacks when the user
             doesn't supply one
         """
         self.deadline = deadline
         self.liveliness = liveliness
         self.incompatible_qos = incompatible_qos
+        self.matched = matched
         self.use_default_callbacks = use_default_callbacks
 
     def create_event_handlers(
@@ -287,5 +308,12 @@ class PublisherEventCallbacks:
 
             except UnsupportedEventTypeError:
                 pass
+
+        if self.matched:
+            event_handlers.append(QoSEventHandler(
+                callback_group=callback_group,
+                callback=self.matched,
+                event_type=QoSPublisherEventType.RCL_PUBLISHER_MATCHED,
+                parent_impl=publisher))
 
         return event_handlers
