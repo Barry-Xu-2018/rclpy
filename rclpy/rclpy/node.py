@@ -924,7 +924,28 @@ class Node:
                         self._descriptors[param.name] = descriptors[param.name]
                     elif param.name not in self._descriptors:
                         descriptor = ParameterDescriptor()
-                        descriptor.dynamic_typing = True
+                        descriptor.name = param.name
+                        if param.type_ :
+                            if param.type_ == Parameter.Type.BOOL :
+                                descriptor.type = ParameterType.PARAMETER_BOOL
+                            elif param.type_ == Parameter.Type.INTEGER :
+                                descriptor.type = ParameterType.PARAMETER_INTEGER
+                            elif param.type_ == Parameter.Type.DOUBLE :
+                                descriptor.type = ParameterType.PARAMETER_DOUBLE
+                            elif param.type_ == Parameter.Type.STRING :
+                                descriptor.type = ParameterType.PARAMETER_STRING
+                            elif param.type_ == Parameter.Type.BYTE_ARRAY :
+                                descriptor.type = ParameterType.PARAMETER_BYTE_ARRAY
+                            elif param.type_ == Parameter.Type.BOOL_ARRAY :
+                                descriptor.type = ParameterType.PARAMETER_BOOL_ARRAY
+                            elif param.type_ == Parameter.Type.INTEGER_ARRAY :
+                                descriptor.type = ParameterType.PARAMETER_INTEGER_ARRAY
+                            elif param.type_ == Parameter.Type.DOUBLE_ARRAY :
+                                descriptor.type = ParameterType.PARAMETER_DOUBLE_ARRAY
+                            else:
+                                descriptor.type = ParameterType.PARAMETER_STRING_ARRAY
+                        else :
+                            descriptor.dynamic_typing = True
                         self._descriptors[param.name] = descriptor
 
                     if Parameter.Type.NOT_SET == self.get_parameter_or(param.name).type_:
