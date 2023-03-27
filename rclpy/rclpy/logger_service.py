@@ -21,7 +21,7 @@ from rclpy.node import Node
 from rclpy.qos import qos_profile_services_default
 from rclpy.validate_topic_name import TOPIC_SEPARATOR_STRING
 
-class LoggingService:
+class LoggerService:
 
     def __init__(self, node: Node):
         self._node_weak_ref = weakref.ref(node)

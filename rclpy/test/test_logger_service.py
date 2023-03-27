@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import concurrent.futures
 
 import unittest
 
@@ -32,22 +33,27 @@ class TestLoggerService(unittest.TestCase):
             namespace='/rclpy',
             context=self.context,
             enable_logger_service = True)
-        
+
         self.test_node = rclpy.create_node(
             'test_logger_service',
             namespace='/rclpy',
             context=self.context)
 
-        self.executor = SingleThreadedExecutor(context=self.context)
-        self.executor.add_node(self.test_node_with_logger_service)
-        self.executor.add_node(self.test_node)
+        exit_event = concurrent.futures.Future()
+
+        self.executor1 = SingleThreadedExecutor(context=self.context)
+        self.executor1.add_node(self.test_node_with_logger_service)
+
+
+        self.executor2 = SingleThreadedExecutor(context=self.context)
+        self.executor2.add_node(self.test_node)
 
     def tearDown(self):
         self.executor.shutdown()
         self.test_node.destroy_node()
         self.test_node_with_logger_service.destroy_node()
         rclpy.shutdown(context=self.context)
-    
+
     def test_connect_get_logger_service(self):
         client = self.test_node.create_client(
             GetLoggerLevels,
@@ -56,7 +62,7 @@ class TestLoggerService(unittest.TestCase):
             self.assertTrue(client.wait_for_service(2))
         finally:
             self.test_node.destroy_client(client)
-    
+
     def test_connect_set_logger_service(self):
         client = self.test_node.create_client(
             SetLoggerLevels,
@@ -65,8 +71,8 @@ class TestLoggerService(unittest.TestCase):
         try:
             self.assertTrue(client.wait_for_service(2))
         finally:
-            self.test_node.destroy_client(client)         
-        
+            self.test_node.destroy_client(client)
+
 
 if __name__ == '__main__':
     unittest.main()
