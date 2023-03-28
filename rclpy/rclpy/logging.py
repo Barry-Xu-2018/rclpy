@@ -54,7 +54,7 @@ def get_logger_effective_level(name):
 
 
 def get_logger_level(name):
-    logger_level = rclpy.rclpy_logging_get_logger_level(name)
+    logger_level = _rclpy.rclpy_logging_get_logger_level(name)
     return LoggingSeverity(logger_level)
 
 

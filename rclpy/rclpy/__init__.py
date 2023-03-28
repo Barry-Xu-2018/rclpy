@@ -182,7 +182,9 @@ def create_node(
         allow_undeclared_parameters=allow_undeclared_parameters,
         automatically_declare_parameters_from_overrides=(
             automatically_declare_parameters_from_overrides
-        ))
+        ),
+        enable_logger_service=enable_logger_service
+        )
 
 
 def spin_once(node: 'Node', *, executor: 'Executor' = None, timeout_sec: float = None) -> None:

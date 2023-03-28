@@ -63,7 +63,7 @@ from rclpy.expand_topic_name import expand_topic_name
 from rclpy.guard_condition import GuardCondition
 from rclpy.impl.implementation_singleton import rclpy_implementation as _rclpy
 from rclpy.logging import get_logger
-from rclpy.logger_service import LoggerService
+from rclpy.logging_service import LoggingService
 from rclpy.parameter import Parameter, PARAMETER_SEPARATOR_STRING
 from rclpy.parameter_service import ParameterService
 from rclpy.publisher import Publisher
@@ -237,7 +237,7 @@ class Node:
             self._parameter_service = ParameterService(self)
 
         if enable_logger_service:
-            self._logger_service = LoggerService(self)
+            self._logger_service = LoggingService(self)
 
     @property
     def publishers(self) -> Iterator[Publisher]:

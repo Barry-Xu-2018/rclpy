@@ -241,5 +241,6 @@ define_logging_api(py::module m)
   m.def("rclpy_logging_get_logging_directory", &rclpy_logging_get_logging_directory);
   m.def("rclpy_logging_rosout_add_sublogger", &rclpy_logging_rosout_add_sublogger);
   m.def("rclpy_logging_rosout_remove_sublogger", &rclpy_logging_rosout_remove_sublogger);
+  m.def("rclpy_logging_get_logger_level", &rclpy_logging_get_logger_level);
 }
 }  // namespace rclpy

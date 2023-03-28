@@ -11,19 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import weakref
 
+import rclpy
 from rcl_interfaces.msg import LoggerLevel, SetLoggerLevelsResult
 from rcl_interfaces.srv import GetLoggerLevels
 from rcl_interfaces.srv import SetLoggerLevels
-from rclpy.node import Node
 from rclpy.qos import qos_profile_services_default
 from rclpy.validate_topic_name import TOPIC_SEPARATOR_STRING
 
-class LoggerService:
+class LoggingService:
 
-    def __init__(self, node: Node):
+    def __init__(self, node):
         self._node_weak_ref = weakref.ref(node)
         node_name = node.get_name()
 
@@ -42,30 +41,30 @@ class LoggerService:
         )
 
     def _get_logger_levels(self, request: GetLoggerLevels.Request, response: GetLoggerLevels.Response):
-        node = self._get_node()
         for name in request.names :
             level = LoggerLevel()
             level.name = name
             try:
-                l = node.get_logger().get_logger_level(name)
+                l = rclpy.logging.get_logger_level(name)
             except RuntimeError:
+                print('Error')
                 l = 0
             level.level = l
             response.levels.append(level)
+        return response
 
 
     def _set_logger_levels(self, request: SetLoggerLevels.Request, response: SetLoggerLevels.Response):
-        node = self._get_node()
         for level in request.levels:
             result = SetLoggerLevelsResult()
             result.successful = True
             try:
-                node.get_logger().set_logger_level(level.name, level.level)
+                rclpy.logging.set_logger_level(level.name, level.level)
             except RuntimeError:
                 result.successful = False
                 result.reason = 'Failed to set logger level'
             response.results.append(result)
-
+        return response
 
     def _get_node(self):
         node = self._node_weak_ref()
