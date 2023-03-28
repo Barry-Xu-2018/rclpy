@@ -42,22 +42,21 @@ class TestLoggerService(unittest.TestCase):
             namespace='/rclpy',
             context=self.context)
 
-        self.executor1 = SingleThreadedExecutor(context=self.context)
-        self.executor1.add_node(self.test_node_with_logger_service)
-        self.executor2 = SingleThreadedExecutor(context=self.context)
-        self.executor2.add_node(self.test_node)
+        self.executor = SingleThreadedExecutor(context=self.context)
+        self.executor.add_node(self.test_node_with_logger_service)
+        self.executor.add_node(self.test_node)
 
-        self.exit_flag = Future()
-
-        def spin_until_task_done(executor, exit_flag):
-            executor.spin_until_future_complete(exit_flag)
-
-        self.thread = threading.Thread(target=spin_until_task_done, args=(self.executor1, self.exit_flag))
-        self.thread.start()   
+        #self.exit_flag = Future()
+#
+        #def spin_until_task_done(executor, exit_flag):
+        #    executor.spin_until_future_complete(exit_flag)
+#
+        #self.thread = threading.Thread(target=spin_until_task_done, args=(self.executor1, self.exit_flag))
+        #self.thread.start()
 
     def tearDown(self):
-        self.exit_flag.set_result(True)
-        self.thread.join()
+        #self.exit_flag.set_result(True)
+        #self.thread.join()
         self.executor.shutdown()
         self.test_node.destroy_node()
         self.test_node_with_logger_service.destroy_node()
@@ -88,11 +87,12 @@ class TestLoggerService(unittest.TestCase):
         client = self.test_node.create_client(
             GetLoggerLevels,
             '/rclpy/test_node_with_logger_service_enabled/get_logger_levels')
-        client.wait_for_service(2)
+        self.assertTrue(client.wait_for_service(2))
         request = GetLoggerLevels.Request()
         request.names=['rcl']
-        future = client.call_async(GetLoggerLevels.Request())
-        self.executor2.spin_once_until_future_complete(future, 5)
+        future = client.call_async(request)
+        self.executor.spin_once_until_future_complete(future, 20)
+        self.assertTrue(future.done())
         self.assertTrue(future.result() is not None)
         print(future.result())
 
