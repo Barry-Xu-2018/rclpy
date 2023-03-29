@@ -46,17 +46,17 @@ class TestLoggerService(unittest.TestCase):
         self.executor.add_node(self.test_node_with_logger_service)
         self.executor.add_node(self.test_node)
 
-        #self.exit_flag = Future()
-#
-        #def spin_until_task_done(executor, exit_flag):
-        #    executor.spin_until_future_complete(exit_flag)
-#
-        #self.thread = threading.Thread(target=spin_until_task_done, args=(self.executor1, self.exit_flag))
-        #self.thread.start()
+        self.exit_flag = Future()
+
+        def spin_until_task_done(executor, exit_flag):
+            executor.spin_until_future_complete(exit_flag)
+
+        self.thread = threading.Thread(target=spin_until_task_done, args=(self.executor, self.exit_flag))
+        self.thread.start()
 
     def tearDown(self):
-        #self.exit_flag.set_result(True)
-        #self.thread.join()
+        self.exit_flag.set_result(True)
+        self.thread.join()
         self.executor.shutdown()
         self.test_node.destroy_node()
         self.test_node_with_logger_service.destroy_node()
@@ -66,7 +66,6 @@ class TestLoggerService(unittest.TestCase):
         client = self.test_node.create_client(
             GetLoggerLevels,
             '/rclpy/test_node_with_logger_service_enabled/get_logger_levels')
-        #self.executor.spin_until_future_complete(Future(), 2)
         try:
             self.assertTrue(client.wait_for_service(2))
         finally:
@@ -77,7 +76,6 @@ class TestLoggerService(unittest.TestCase):
             SetLoggerLevels,
             '/rclpy/test_node_with_logger_service_enabled/set_logger_levels'
         )
-        #self.executor.spin_until_future_complete(Future(), 2)
         try:
             self.assertTrue(client.wait_for_service(2))
         finally:
@@ -91,7 +89,7 @@ class TestLoggerService(unittest.TestCase):
         request = GetLoggerLevels.Request()
         request.names=['rcl']
         future = client.call_async(request)
-        self.executor.spin_once_until_future_complete(future, 20)
+        time.sleep(2)
         self.assertTrue(future.done())
         self.assertTrue(future.result() is not None)
         print(future.result())
