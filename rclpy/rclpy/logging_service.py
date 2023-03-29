@@ -13,61 +13,65 @@
 # limitations under the License.
 import weakref
 
-import rclpy
 from rcl_interfaces.msg import LoggerLevel, SetLoggerLevelsResult
 from rcl_interfaces.srv import GetLoggerLevels
 from rcl_interfaces.srv import SetLoggerLevels
+import rclpy
+from rclpy.impl.logging_severity import LoggingSeverity
 from rclpy.qos import qos_profile_services_default
 from rclpy.validate_topic_name import TOPIC_SEPARATOR_STRING
+
+ERR_MSG_INVAILD_LOGGER_NAME = 'Logger name is invaild.'
+ERR_MSG_INVAILD_LOGGER_LEVEL = 'Logger level is invaild.'
+ERR_MSG_LOGGING_INTERNAL_ERROR = 'Logging system internal error.'
 
 class LoggingService:
 
     def __init__(self, node):
-        self._node_weak_ref = weakref.ref(node)
         node_name = node.get_name()
 
         get_logger_name_service_name = \
             TOPIC_SEPARATOR_STRING.join((node_name, 'get_logger_levels'))
         node.create_service(
             GetLoggerLevels, get_logger_name_service_name,
-            self._get_logger_levels, qos_profile=qos_profile_services_default
+            self.__get_logger_levels, qos_profile=qos_profile_services_default
         )
 
         set_logger_name_service_name = \
             TOPIC_SEPARATOR_STRING.join((node_name, 'set_logger_levels'))
         node.create_service(
             SetLoggerLevels, set_logger_name_service_name,
-            self._set_logger_levels, qos_profile=qos_profile_services_default
+            self.__set_logger_levels, qos_profile=qos_profile_services_default
         )
 
-    def _get_logger_levels(self, request: GetLoggerLevels.Request, response: GetLoggerLevels.Response):
+    def __get_logger_levels(self, request: GetLoggerLevels.Request, response: GetLoggerLevels.Response):
         for name in request.names :
             level = LoggerLevel()
             level.name = name
             try:
                 l = rclpy.logging.get_logger_level(name)
             except RuntimeError:
-                print('Error')
                 l = 0
             level.level = l
             response.levels.append(level)
         return response
 
-
-    def _set_logger_levels(self, request: SetLoggerLevels.Request, response: SetLoggerLevels.Response):
+    def __set_logger_levels(self, request: SetLoggerLevels.Request, response: SetLoggerLevels.Response):
         for level in request.levels:
             result = SetLoggerLevelsResult()
-            result.successful = True
-            try:
-                rclpy.logging.set_logger_level(level.name, level.level)
-            except RuntimeError:
-                result.successful = False
-                result.reason = 'Failed to set logger level'
+            result.successful = False
+
+            if level.name.strip() != '':
+                if LoggingSeverity.valid_logging_severity(level.level):
+                    try:
+                        rclpy.logging.set_logger_level(level.name, level.level)
+                        result.successful = True
+                    except RuntimeError:
+                        result.reason = ERR_MSG_LOGGING_INTERNAL_ERROR
+                else :
+                    result.reason = ERR_MSG_INVAILD_LOGGER_LEVEL
+            else:
+                result.reason = ERR_MSG_INVAILD_LOGGER_NAME
+
             response.results.append(result)
         return response
-
-    def _get_node(self):
-        node = self._node_weak_ref()
-        if node is None:
-            raise ReferenceError('Expected valid node weak reference')
-        return node

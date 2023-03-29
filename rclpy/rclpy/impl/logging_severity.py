@@ -31,3 +31,15 @@ class LoggingSeverity(IntEnum):
     WARN = _rclpy.RCUTILS_LOG_SEVERITY.RCUTILS_LOG_SEVERITY_WARN
     ERROR = _rclpy.RCUTILS_LOG_SEVERITY.RCUTILS_LOG_SEVERITY_ERROR
     FATAL = _rclpy.RCUTILS_LOG_SEVERITY.RCUTILS_LOG_SEVERITY_FATAL
+
+    @staticmethod
+    def valid_logging_severity(level: IntEnum) -> bool:
+        if level == LoggingSeverity.UNSET \
+            or level == LoggingSeverity.DEBUG \
+            or level == LoggingSeverity.INFO \
+            or level == LoggingSeverity.WARN \
+            or level == LoggingSeverity.ERROR \
+            or level == LoggingSeverity.FATAL:
+            return True
+        else:
+            return False
