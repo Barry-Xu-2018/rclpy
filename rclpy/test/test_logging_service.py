@@ -13,17 +13,16 @@
 # limitations under the License.
 
 import threading
-import time
 
 import unittest
 
-from rcl_interfaces.msg import LoggerLevel, SetLoggerLevelsResult
+from rcl_interfaces.msg import LoggerLevel
 from rcl_interfaces.srv import GetLoggerLevels
 from rcl_interfaces.srv import SetLoggerLevels
 import rclpy
 import rclpy.context
 from rclpy.executors import SingleThreadedExecutor
-from rclpy.logging_service import ERR_MSG_INVAILD_LOGGER_NAME, ERR_MSG_INVAILD_LOGGER_LEVEL
+from rclpy.logging_service import ERR_MSG_INVAILD_LOGGER_LEVEL, ERR_MSG_INVAILD_LOGGER_NAME
 
 
 class TestLoggingService(unittest.TestCase):
@@ -35,7 +34,7 @@ class TestLoggingService(unittest.TestCase):
             'test_node_with_logger_service_enabled',
             namespace='/rclpy',
             context=self.context,
-            enable_logger_service = True)
+            enable_logger_service=True)
 
         self.test_node = rclpy.create_node(
             'test_logger_service',
@@ -107,7 +106,7 @@ class TestLoggingService(unittest.TestCase):
             '/rclpy/test_node_with_logger_service_enabled/get_logger_levels')
         self.assertTrue(get_client.wait_for_service(2))
         request = GetLoggerLevels.Request()
-        request.names=[test_log_name]
+        request.names = [test_log_name]
         future = get_client.call_async(request)
         self.executor2.spin_until_future_complete(future, 10)
         self.assertTrue(future.done())
@@ -163,7 +162,7 @@ class TestLoggingService(unittest.TestCase):
             '/rclpy/test_node_with_logger_service_enabled/get_logger_levels')
         self.assertTrue(get_client.wait_for_service(2))
         request = GetLoggerLevels.Request()
-        request.names=[test_log_name1, test_log_name2, test_log_name3]
+        request.names = [test_log_name1, test_log_name2, test_log_name3]
         future = get_client.call_async(request)
         self.executor2.spin_until_future_complete(future, 10)
         self.assertTrue(future.done())

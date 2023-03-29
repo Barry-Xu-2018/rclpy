@@ -35,11 +35,11 @@ class LoggingSeverity(IntEnum):
     @staticmethod
     def valid_logging_severity(level: IntEnum) -> bool:
         if level == LoggingSeverity.UNSET \
-            or level == LoggingSeverity.DEBUG \
-            or level == LoggingSeverity.INFO \
-            or level == LoggingSeverity.WARN \
-            or level == LoggingSeverity.ERROR \
-            or level == LoggingSeverity.FATAL:
+           or level == LoggingSeverity.DEBUG \
+           or level == LoggingSeverity.INFO \
+           or level == LoggingSeverity.WARN \
+           or level == LoggingSeverity.ERROR \
+           or level == LoggingSeverity.FATAL:
             return True
         else:
             return False
