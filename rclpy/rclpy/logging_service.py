@@ -39,8 +39,7 @@ class LoggingService:
             self._set_logger_levels, qos_profile=qos_profile_services_default
         )
 
-    def _get_logger_levels(self, request: GetLoggerLevels.Request,
-                           response: GetLoggerLevels.Response):
+    def _get_logger_levels(self, request, response):
         for name in request.names:
             logger_level = LoggerLevel()
             logger_level.name = name
@@ -52,11 +51,9 @@ class LoggingService:
             response.levels.append(logger_level)
         return response
 
-    def _set_logger_levels(self, request: SetLoggerLevels.Request,
-                           response: SetLoggerLevels.Response):
+    def _set_logger_levels(self, request, response):
         for level in request.levels:
             result = SetLoggerLevelsResult()
-
             result.successful = False
             try:
                 rclpy.logging.set_logger_level(level.name, level.level, True)
@@ -65,6 +62,5 @@ class LoggingService:
                 result.reason = 'Failed reason: Invaild logger level.'
             except RuntimeError as e:
                 result.reason = str(e)
-
             response.results.append(result)
         return response
