@@ -242,7 +242,7 @@ class RcutilsLogger:
 
     def set_level(self, level):
         level = LoggingSeverity(level)
-        return _rclpy.rclpy_logging_set_logger_level(self.name, level)
+        return _rclpy.rclpy_logging_set_logger_level(self.name, level, False)
 
     def get_effective_level(self):
         level = LoggingSeverity(

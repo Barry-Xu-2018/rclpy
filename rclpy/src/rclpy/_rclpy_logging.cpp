@@ -64,10 +64,11 @@ rclpy_logging_shutdown()
  *
  * \param[in] name Fully-qualified name of logger.
  * \param[in] level to set
+ * \param[in] detailed_error True for reporting detailed rcutils error.
  * \return None
  */
 void
-rclpy_logging_set_logger_level(const char * name, int level, bool detailed_error)
+rclpy_logging_set_logger_level(const char * name, int level, bool detailed_error = false)
 {
   rcutils_ret_t ret = rcutils_logging_set_logger_level(name, level);
   if (ret != RCUTILS_RET_OK) {

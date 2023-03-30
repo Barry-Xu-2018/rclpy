@@ -56,7 +56,7 @@ class LoggingService:
             result = SetLoggerLevelsResult()
             result.successful = False
             try:
-                rclpy.logging.set_logger_level(level.name, level.level, True)
+                rclpy.logging.set_logger_level(level.name, level.level, detailed_error=True)
                 result.successful = True
             except ValueError:
                 result.reason = 'Failed reason: Invaild logger level.'
