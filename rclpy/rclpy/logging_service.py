@@ -16,13 +16,8 @@ from rcl_interfaces.msg import LoggerLevel, SetLoggerLevelsResult
 from rcl_interfaces.srv import GetLoggerLevels
 from rcl_interfaces.srv import SetLoggerLevels
 import rclpy
-from rclpy.impl.logging_severity import LoggingSeverity
 from rclpy.qos import qos_profile_services_default
 from rclpy.validate_topic_name import TOPIC_SEPARATOR_STRING
-
-ERR_MSG_INVAILD_LOGGER_NAME = 'Logger name is invaild.'
-ERR_MSG_INVAILD_LOGGER_LEVEL = 'Logger level is invaild.'
-ERR_MSG_LOGGING_INTERNAL_ERROR = 'Logging system internal error.'
 
 
 class LoggingService:
@@ -34,46 +29,42 @@ class LoggingService:
             TOPIC_SEPARATOR_STRING.join((node_name, 'get_logger_levels'))
         node.create_service(
             GetLoggerLevels, get_logger_name_service_name,
-            self.__get_logger_levels, qos_profile=qos_profile_services_default
+            self._get_logger_levels, qos_profile=qos_profile_services_default
         )
 
         set_logger_name_service_name = \
             TOPIC_SEPARATOR_STRING.join((node_name, 'set_logger_levels'))
         node.create_service(
             SetLoggerLevels, set_logger_name_service_name,
-            self.__set_logger_levels, qos_profile=qos_profile_services_default
+            self._set_logger_levels, qos_profile=qos_profile_services_default
         )
 
-    def __get_logger_levels(self, request: GetLoggerLevels.Request,
-                            response: GetLoggerLevels.Response):
+    def _get_logger_levels(self, request: GetLoggerLevels.Request,
+                           response: GetLoggerLevels.Response):
         for name in request.names:
-            level = LoggerLevel()
-            level.name = name
+            logger_level = LoggerLevel()
+            logger_level.name = name
             try:
                 ret_level = rclpy.logging.get_logger_level(name)
             except RuntimeError:
                 ret_level = 0
-            level.level = ret_level
-            response.levels.append(level)
+            logger_level.level = ret_level
+            response.levels.append(logger_level)
         return response
 
-    def __set_logger_levels(self, request: SetLoggerLevels.Request,
-                            response: SetLoggerLevels.Response):
+    def _set_logger_levels(self, request: SetLoggerLevels.Request,
+                           response: SetLoggerLevels.Response):
         for level in request.levels:
             result = SetLoggerLevelsResult()
-            result.successful = False
 
-            if level.name.strip() != '':
-                if LoggingSeverity.valid_logging_severity(level.level):
-                    try:
-                        rclpy.logging.set_logger_level(level.name, level.level)
-                        result.successful = True
-                    except RuntimeError:
-                        result.reason = ERR_MSG_LOGGING_INTERNAL_ERROR
-                else:
-                    result.reason = ERR_MSG_INVAILD_LOGGER_LEVEL
-            else:
-                result.reason = ERR_MSG_INVAILD_LOGGER_NAME
+            result.successful = False
+            try:
+                rclpy.logging.set_logger_level(level.name, level.level, True)
+                result.successful = True
+            except ValueError:
+                result.reason = 'Failed reason: Invaild logger level.'
+            except RuntimeError as e:
+                result.reason = str(e)
 
             response.results.append(result)
         return response

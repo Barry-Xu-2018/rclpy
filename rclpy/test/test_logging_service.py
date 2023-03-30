@@ -22,7 +22,6 @@ from rcl_interfaces.srv import SetLoggerLevels
 import rclpy
 import rclpy.context
 from rclpy.executors import SingleThreadedExecutor
-from rclpy.logging_service import ERR_MSG_INVAILD_LOGGER_LEVEL, ERR_MSG_INVAILD_LOGGER_NAME
 
 
 class TestLoggingService(unittest.TestCase):
@@ -184,12 +183,8 @@ class TestLoggingService(unittest.TestCase):
 
         request = SetLoggerLevels.Request()
         set_level = LoggerLevel()
-        set_level.name = ''
-        set_level.level = 10
-        request.levels.append(set_level)
-        set_level = LoggerLevel()
-        set_level.name = '  '
-        set_level.level = 20
+        set_level.name = 'test_node_with_logger_service_enabled'
+        set_level.level = 22
         request.levels.append(set_level)
         set_level = LoggerLevel()
         set_level.name = 'rcl'
@@ -199,13 +194,11 @@ class TestLoggingService(unittest.TestCase):
         self.executor2.spin_until_future_complete(future, 10)
         self.assertTrue(future.done())
         response = future.result()
-        self.assertEqual(len(response.results), 3)
+        self.assertEqual(len(response.results), 2)
         self.assertFalse(response.results[0].successful)
-        self.assertEqual(response.results[0].reason, ERR_MSG_INVAILD_LOGGER_NAME)
+        self.assertEqual(response.results[0].reason, 'Failed reason: Invaild logger level.')
         self.assertFalse(response.results[1].successful)
-        self.assertEqual(response.results[1].reason, ERR_MSG_INVAILD_LOGGER_NAME)
-        self.assertFalse(response.results[2].successful)
-        self.assertEqual(response.results[2].reason, ERR_MSG_INVAILD_LOGGER_LEVEL)
+        self.assertEqual(response.results[1].reason, 'Failed reason: Invaild logger level.')
         self.test_node.destroy_client(set_client)
 
     def test_set_logging_level_with_partial_invalid_param(self):
@@ -235,7 +228,7 @@ class TestLoggingService(unittest.TestCase):
         self.assertTrue(response.results[0].successful)
         self.assertEqual(response.results[0].reason, '')
         self.assertFalse(response.results[1].successful)
-        self.assertEqual(response.results[1].reason, ERR_MSG_INVAILD_LOGGER_LEVEL)
+        self.assertEqual(response.results[1].reason, 'Failed reason: Invaild logger level.')
         self.assertTrue(response.results[2].successful)
         self.assertEqual(response.results[2].reason, '')
         self.test_node.destroy_client(set_client)

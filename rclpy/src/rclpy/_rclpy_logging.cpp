@@ -26,6 +26,7 @@ namespace py = pybind11;
 #include <stdexcept>
 #include <string>
 
+#include "exceptions.hpp"
 #include "logging.hpp"
 #include "logging_api.hpp"
 
@@ -66,12 +67,16 @@ rclpy_logging_shutdown()
  * \return None
  */
 void
-rclpy_logging_set_logger_level(const char * name, int level)
+rclpy_logging_set_logger_level(const char * name, int level, bool detailed_error)
 {
   rcutils_ret_t ret = rcutils_logging_set_logger_level(name, level);
   if (ret != RCUTILS_RET_OK) {
-    rcutils_reset_error();
-    throw std::runtime_error("Failed to set level for logger");
+    if (detailed_error) {
+      throw std::runtime_error(rclpy::append_rcutils_error("Failed reason"));
+    } else {
+      rcutils_reset_error();
+      throw std::runtime_error("Failed to set level for logger");
+    }
   }
 }
 

@@ -43,9 +43,9 @@ def clear_config():
     initialize()
 
 
-def set_logger_level(name, level):
+def set_logger_level(name, level, detailed_error=False):
     level = LoggingSeverity(level)
-    return _rclpy.rclpy_logging_set_logger_level(name, level)
+    return _rclpy.rclpy_logging_set_logger_level(name, level, detailed_error)
 
 
 def get_logger_effective_level(name):
