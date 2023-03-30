@@ -239,7 +239,9 @@ define_logging_api(py::module m)
   m.def("rclpy_logging_get_separator_string", []() {return RCUTILS_LOGGING_SEPARATOR_STRING;});
   m.def("rclpy_logging_initialize", &rclpy_logging_initialize);
   m.def("rclpy_logging_shutdown", &rclpy_logging_shutdown);
-  m.def("rclpy_logging_set_logger_level", &rclpy_logging_set_logger_level);
+  m.def(
+    "rclpy_logging_set_logger_level", &rclpy_logging_set_logger_level,
+    py::arg("name"), py::arg("level"), py::arg("detailed_error") = false);
   m.def("rclpy_logging_get_logger_effective_level", &rclpy_logging_get_logger_effective_level);
   m.def("rclpy_logging_logger_is_enabled_for", &rclpy_logging_logger_is_enabled_for);
   m.def("rclpy_logging_rcutils_log", &rclpy_logging_rcutils_log);
